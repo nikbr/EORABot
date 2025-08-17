@@ -1,0 +1,33 @@
+
+server/.serverenv
+telegram-bot/.tgbotenv
+
+# Bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Misc
+.DS_Store
+
+.env
+
+# Docker/Compose secrets (don't commit any secrets!)
+.secrets/
+*.secret
+
+# Persisted vector DBs or temp storage
+server/vector_db/
+
+# Local ChromaDB/FAISS data
+chroma/
+*.chroma.db
+
+# Other
+*.sqlite3
+*.log
+
+# Ignore IDE/project files
+.vscode/
+.idea/
+*.swp
