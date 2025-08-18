@@ -1,11 +1,12 @@
 import openai
 import re
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
 from langchain_openai import ChatOpenAI
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
+from langchain_core.output_parsers import StrOutputParser
+
 import json
 
 from .config import OPENAI_MODEL, OPENAI_EMBEDDINGS_MODEL, COLLECTION_NAME, VECTOR_STORE_PATH
@@ -13,11 +14,11 @@ from .common import ContextEntry
 
 QUESTION_PROMPT = PromptTemplate(
     input_variables=["question", "source_list", "context"],
-    template="""
-        Ты ассистент компании EORA. Отвечай на вопросы по-русски.
+    template="""Ты ассистент компании EORA. Отвечай на вопросы по-русски.
 Используй только предоставленные источники.
 После каждого факта добавляй в квадратных скобках номера источников, например [1], [2], [3].
-Если не находишь ответ в источниках, скажи об этом и всё.
+Отвечай в абзаце. Допустимо включать факты из нескольких источников в одно предложение, обязательно включайте ссылку после факта([1], [2]...), даже если она находится в середине предложения.
+Если не находишь ответ в источниках, скажи <<У меня нет такой информации.>> и всё.
 Не выдумывай источники и не используй посторонние знания.\n
 Список источников (используй их номера в ответе) и их фрагменты:\n{context}\n
 Вопрос пользователя:\n{question}
@@ -32,10 +33,10 @@ def get_embeddings():
     return OpenAIEmbeddings(model=OPENAI_EMBEDDINGS_MODEL)
 
 def get_vectorstore():
-    return Chroma(collection_name=COLLECTION_NAME, embedding_function=get_embeddings, persist_directory=VECTOR_STORE_PATH)
+    return Chroma(collection_name=COLLECTION_NAME, embedding_function=get_embeddings(), persist_directory=VECTOR_STORE_PATH)
 
 def get_chain():
-    return LLMChain(llm=get_llm(), prompt=QUESTION_PROMPT)
+    return QUESTION_PROMPT | get_llm() | StrOutputParser()
 
 def create_context(docs: list[Document]) -> tuple[str, dict[int, str]]:
     source_dict = dict()
@@ -71,13 +72,14 @@ def ask_about_eora(question: str) -> dict:
     chain = get_chain()
 
     result = chain.invoke({"question":question, "context":context_text})
-    output = result["text"]
+
     try:
-        data = json.loads(output)
+        data = dict()
+        data["text"] = result
         data["sources"] = id_dict
         return data
     except Exception as e:
-        print("Failed to parse LLM output as JSON:", output)
+        print("Failed to parse LLM output as JSON:", result)
         raise
 
 

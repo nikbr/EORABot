@@ -19,7 +19,7 @@ def get_page_content(url:str) -> PageContent:
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
-        page.goto(url, timeout=10000, wait_until='domcontentloaded')
+        page.goto(url, wait_until='domcontentloaded')
         page.wait_for_selector("div")
 
         title = page.title()

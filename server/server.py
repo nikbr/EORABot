@@ -1,11 +1,11 @@
 from mcp.server.fastmcp import FastMCP
 from dotenv import load_dotenv
 from lib.rag_chain import ask_about_eora
-
+from lib.config import HOST
 
 mcp = FastMCP(
     name = "EORAInfoBot",
-    host="::",
+    host=HOST,
     port=8050
 )
 

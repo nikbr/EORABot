@@ -12,16 +12,17 @@ import json
 import os
 asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
 nest_asyncio.apply()
-
-
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+from lib.config import TELEGRAM_BOT_TOKEN, SERVER_HOST
+import re
 
 
 bot = Bot(token=str(TELEGRAM_BOT_TOKEN))
 dp = Dispatcher()
 
+
+
 async def call_mcp_tool(tool_name, args):
-    async with sse_client("http://eorabot:8050/sse") as (read_stream, write_stream):
+    async with sse_client(f"{SERVER_HOST}:8050/sse") as (read_stream, write_stream):
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
             return await session.call_tool(tool_name, arguments=args)
@@ -39,18 +40,23 @@ async def answer_any(msg: types.Message):
     answer = response.content[0].model_dump()
 
     try:
+        print("answer:", answer, flush=True)
         answer_data = json.loads(answer['text'])
-        sources = answer["sources"]
+        sources = answer_data["sources"]
+
+        def replace_reference(match):
+            num = match.group(1)
+            url = sources.get(num, "#")
+            return f'<a href="{url}">[{num}]</a>'
         
+        result = re.sub(r'\[(\d+)\]', replace_reference, answer_data["text"])
+        await msg.answer(result, parse_mode="HTML")
+
     except Exception as e:
         await msg.answer("Ответ не был правильным JSONом. Пожалуйста попробуйте ещё раз.")
         return
 
-    await msg.answer(
-        "Спасибо за ваш вопрос! 🧠\n"
-        "Компания <b>EORA</b> занимается разработкой инновационных цифровых решений.\n"
-        "Если нужно, могу рассказать подробнее про продукты, миссию или команду."
-    )
+    
 
 def run_bot():
     dp.run_polling(bot)
