@@ -43,7 +43,7 @@ async def start_cmd(msg: types.Message):
 @dp.message()
 async def answer_any(msg: types.Message):
     await msg.answer("Пожалуйста подождите ответа...")
-    do_with_retries(answer_any_helper, msg, retries=1)
+    await do_with_retries(answer_any_helper, msg, retries=1)
 
 
 
