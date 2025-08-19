@@ -68,7 +68,7 @@ async def answer_any_helper(msg: types.Message):
         await msg.answer(result, parse_mode="HTML")
 
     except Exception as e:
-        await msg.answer("Ответ не был правильным JSONом. Пожалуйста попробуйте ещё раз.")
+        await msg.answer("Пожалуйста попробуйте ещё раз.")
         return
 
 def run_bot():
