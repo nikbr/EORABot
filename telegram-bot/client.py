@@ -29,7 +29,6 @@ async def call_mcp_tool(tool_name, args):
 
 async def do_with_retries(operation: Callable, *args, retries:int = 1):
     for _ in range(retries+1):
-        print("Attempt", _, flush=True)
         try:
             return await operation(*args)
         except Exception as e:
@@ -72,8 +71,8 @@ async def answer_any_helper(msg: types.Message):
     await msg.answer(result, parse_mode="HTML")
 
 
-def run_bot():
-    dp.run_polling(bot)
+async def run_bot():
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(run_bot())
