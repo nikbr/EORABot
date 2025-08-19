@@ -29,6 +29,7 @@ async def call_mcp_tool(tool_name, args):
 
 async def do_with_retries(operation: Callable, *args, retries:int = 1):
     for _ in range(retries+1):
+        print("Attempt", _)
         try:
             return await operation(*args)
         except Exception:
@@ -43,7 +44,10 @@ async def start_cmd(msg: types.Message):
 @dp.message()
 async def answer_any(msg: types.Message):
     await msg.answer("Пожалуйста подождите ответа...")
-    await do_with_retries(answer_any_helper, msg, retries=1)
+    try:
+        await do_with_retries(answer_any_helper, msg, retries=1)
+    except Exception:
+        await msg.answer("Пожалуйста попробуйте ещё раз.")
 
 
 
@@ -52,24 +56,20 @@ async def answer_any_helper(msg: types.Message):
 
     answer = response.content[0].model_dump()
 
-    try:
-        print("answer:", answer, flush=True)
-        answer_data = json.loads(answer['text'])
-        sources = answer_data["sources"]
+    print("answer:", answer, flush=True)
+    answer_data = json.loads(answer['text'])
+    sources = answer_data["sources"]
 
-        def replace_reference(match):
-            num = match.group(1)
-            if num in sources: url = sources[num]
-            else:
-                raise
-            return f'<a href="{url}">[{num}]</a>'
+    def replace_reference(match):
+        num = match.group(1)
+        if num in sources: url = sources[num]
+        else:
+            raise
+        return f'<a href="{url}">[{num}]</a>'
 
-        result = re.sub(r'\[(\d+)\]', replace_reference, answer_data["text"])
-        await msg.answer(result, parse_mode="HTML")
+    result = re.sub(r'\[(\d+)\]', replace_reference, answer_data["text"])
+    await msg.answer(result, parse_mode="HTML")
 
-    except Exception as e:
-        await msg.answer("Пожалуйста попробуйте ещё раз.")
-        return
 
 def run_bot():
     dp.run_polling(bot)
