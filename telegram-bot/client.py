@@ -29,10 +29,11 @@ async def call_mcp_tool(tool_name, args):
 
 async def do_with_retries(operation: Callable, *args, retries:int = 1):
     for _ in range(retries+1):
-        print("Attempt", _)
+        print("Attempt", _, flush=True)
         try:
             return await operation(*args)
-        except Exception:
+        except Exception as e:
+            print(e, flush=True)
             continue
     raise Exception("All retries failed.")
 
