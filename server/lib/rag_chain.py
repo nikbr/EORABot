@@ -13,7 +13,7 @@ from .config import OPENAI_MODEL, OPENAI_EMBEDDINGS_MODEL, COLLECTION_NAME, VECT
 from .common import ContextEntry
 
 QUESTION_PROMPT = PromptTemplate(
-    input_variables=["question", "source_list", "context"],
+    input_variables=["question", "context"],
     template="""Ты ассистент компании EORA. Отвечай на вопросы по-русски.
 Используй только предоставленные источники.
 После каждого факта добавляй в квадратных скобках номера источников, например [1], [2], [3].
